@@ -253,7 +253,7 @@ Account = `CURRENT` + `PRODUCTION`。五模块 = 代码齐 + `NOT_DEPLOYED`。
 
 ## 29. PR 列表
 
-全部 **draft**，禁止自动 merge。
+禁止自动 merge。主站生产基线相关 PR **不得**由 Agent 合并。
 
 | 仓库 | PR | base |
 |---|---|---|
@@ -336,7 +336,7 @@ platform / shared / softwarelist **没有**同等自动生产部署。
 
 ## 35. 下一步建议（执行清单）
 
-1. 人工 review draft PR：shared#3 → platform#3 → 产品非生产 PR（**不要合 Andyyyds#24 / 生产基线**）
+1. 人工 review：shared#3 → platform#3 → 产品非生产 PR（**不要合 Andyyyds#24 / 生产基线**）
 2. Owner 在香港机落地预发：目录、独立 DB/Secret、Nginx、DNS/TLS → `https://api-staging.yydsxwh.com/health`
 3. 预发按 AI → Catalog → Releases → Storage → Payments 每次开一个 Flag
 4. 打开 account 仓库联调 Discovery / JWKS / aud
