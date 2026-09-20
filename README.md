@@ -18,6 +18,7 @@
 ```
 src/
   modules/
+    ai/           AI Provider、模型路由、限流、用量
     storage/      文件与对象存储
     catalog/      公司产品目录
     releases/     软件版本与安装包
@@ -60,17 +61,22 @@ npm run build
 
 | 模块 | 状态 | 说明 |
 |---|---|---|
+| AI | 已实现 | 多 Provider、按用途路由、超时、fallback、限流、用量与成本 |
 | Storage / Files | 已实现 | 本地盘与阿里云 OSS，签名直传、分片、签名下载 |
 | Catalog | 已实现 | 公司产品目录的唯一机器可读来源 |
 | Releases | 已实现 | Release / ReleaseAsset、latest 查询、签名下载 |
 | Payments | 已实现（未接入生产） | 支付单、幂等、回调验签、履约事件 |
 
-**故意没做**：Notifications、Audit、Entitlements、Theme Service。这些目前没有第二个真实
-调用方，只在 `docs/architecture.md` 里定义边界，不写空服务撑架构图。
+**故意没做**：Notifications、Communications、Maps、Search、Config / Feature Flags、
+Billing / Entitlements、Audit、Theme Service。这些目前没有第二个真实调用方，
+只在文档里定义边界，不写空服务撑架构图。
 
 ## 文档
 
+- `docs/company-platform-architecture.md` —— 公司级五层架构、Studio 定位、Secret 原则
+- `docs/capability-registry.md` —— **每新增一个公共能力先更新这张表**
 - `docs/architecture.md` —— 四层边界、数据所有权、版本策略
+- `docs/ai.md`
 - `docs/storage.md`
 - `docs/releases.md`
 - `docs/payments.md`

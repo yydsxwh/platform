@@ -179,3 +179,32 @@ model Refund {
 
   @@unique([paymentId, clientRefundNo])
 }
+
+// ---------------------------------------------------------------------------
+// ai
+// ---------------------------------------------------------------------------
+
+/// AI 调用记录：用量、成本与失败分类。
+/// 只记元数据，不存提示词与模型输出——那是产品的业务内容，也可能含用户隐私。
+model AiUsage {
+  id               String   @id
+  requestId        String
+  clientId         String
+  actorId          String?
+  purpose          String?
+  provider         String
+  model            String
+  promptTokens     Int      @default(0)
+  completionTokens Int      @default(0)
+  /// 百万分之一元；provider 未配单价时为 0
+  costMicros       Int      @default(0)
+  latencyMs        Int      @default(0)
+  status           String
+  errorKind        String?
+  metadata         String   @default("{}")
+  createdAt        DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([clientId, createdAt])
+  @@index([provider, model])
+}

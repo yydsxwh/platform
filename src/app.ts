@@ -18,6 +18,7 @@ import {
   type AppEnv,
 } from "./http/context";
 import { PlatformError } from "./errors";
+import { createAiRouter } from "./http/routes/ai";
 import { createCatalogRouter } from "./http/routes/catalog";
 import {
   createPaymentRouter,
@@ -28,6 +29,7 @@ import {
   createLocalObjectRouter,
   createStorageRouter,
 } from "./http/routes/storage";
+import { AiService } from "./modules/ai/service";
 import { CatalogService } from "./modules/catalog/service";
 import { MockPaymentAdapter } from "./modules/payments/providers/mock";
 import {
@@ -42,6 +44,7 @@ import type { StorageAdapter } from "./modules/storage/providers/types";
 import { StorageService } from "./modules/storage/service";
 
 export type PlatformServices = {
+  ai: AiService;
   storage: StorageService;
   catalog: CatalogService;
   releases: ReleaseService;
@@ -93,6 +96,7 @@ export function buildApp(input: {
   const { config, db } = input;
   const { adapter, local } = buildStorageAdapter(config);
   const storage = new StorageService(db, adapter);
+  const ai = new AiService(db, config.ai);
   const catalog = new CatalogService(db);
   const releases = new ReleaseService(db, storage);
   const payments = new PaymentService(
@@ -128,6 +132,7 @@ export function buildApp(input: {
 
   const api = new Hono<AppEnv>();
   api.use("*", serviceAuthMiddleware(config));
+  api.route("/ai", createAiRouter({ ai }));
   api.route("/storage", createStorageRouter({ storage, local }));
   api.route("/catalog", createCatalogRouter({ catalog }));
   api.route("/payments", createPaymentRouter({ payments }));
@@ -135,5 +140,5 @@ export function buildApp(input: {
 
   app.route(`/${PLATFORM_API_VERSION}`, api);
 
-  return { app, services: { storage, catalog, releases, payments }, db };
+  return { app, services: { ai, storage, catalog, releases, payments }, db };
 }

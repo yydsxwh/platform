@@ -7,6 +7,8 @@
 
 import { z } from "zod";
 
+import { loadAiConfig, type AiConfig } from "./modules/ai/config";
+
 const serviceTokenEntry = /^([a-z0-9][a-z0-9_-]*):(.+)$/i;
 
 /**
@@ -77,6 +79,8 @@ export type OssConfig = {
 
 export type PlatformConfig = {
   env: PlatformEnv;
+  /** AI Provider、路由与限流；同样在启动时校验，坏配置不留到第一个请求 */
+  ai: AiConfig;
   isProduction: boolean;
   serviceTokens: Map<string, string>;
   oss: OssConfig | null;
@@ -110,6 +114,7 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): PlatformCon
 
   return {
     env,
+    ai: loadAiConfig(source),
     isProduction,
     serviceTokens,
     oss,
