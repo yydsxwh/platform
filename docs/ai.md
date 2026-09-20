@@ -4,7 +4,9 @@
 因此 Provider、模型、API Key、Base URL、模型路由、限流、调用记录、成本统计
 统一归 `platform/ai`。
 
-**产品不得自己保存任何厂商 Key。**
+**产品不得自己保存任何厂商 Key。** Account 已上线，与 AI Key 无关：Key 只在 platform 进程。
+
+Studio 可以看 Provider 是否健康、是否配置、模型、用途、用量，**绝对不能返回 API Key**。
 
 ```
 产品 → shared AI Client → platform AI API → Qwen / OpenAI / 其他模型

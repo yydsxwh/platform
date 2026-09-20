@@ -21,7 +21,7 @@ const SERVICE = "platform";
 
 /** 命中这些键名的字段一律不输出，防止顺手把凭证带进日志 */
 const REDACT_KEYS =
-  /(key|secret|token|password|authorization|signature|cookie|credential)/i;
+  /(key|secret|token|password|authorization|signature|cookie|credential|prompt|reply)/i;
 
 export type LogFields = Record<string, unknown>;
 

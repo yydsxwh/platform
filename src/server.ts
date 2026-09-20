@@ -8,6 +8,7 @@ import { PrismaClient } from "@prisma/client";
 
 import { buildApp } from "./app";
 import { loadConfig } from "./config";
+import { logger } from "./observability/logger";
 
 loadEnvFile();
 
@@ -16,9 +17,10 @@ const db = new PrismaClient();
 const { app } = buildApp({ config, db });
 
 const server = serve({ fetch: app.fetch, port: config.env.PORT }, (info) => {
-  console.log(
-    `[platform] 监听 ${info.port}，存储后端 ${config.env.STORAGE_DEFAULT_PROVIDER}`,
-  );
+  logger.info("server", "listening", {
+    port: info.port,
+    storageProvider: config.env.STORAGE_DEFAULT_PROVIDER,
+  });
 });
 
 async function shutdown(signal: string) {
