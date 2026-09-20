@@ -1,0 +1,181 @@
+// platform 是模块化单体：一个库，模块之间按前缀和外键边界逻辑分区。
+// 规模变大后可以按模块拆库，现在不提前微服务化。
+//
+// 数据所有权：这里只存公共平台数据（文件、版本、产品目录事实、支付记录）。
+// 用户身份属于 account，业务数据属于各产品，都不要往这里塞。
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// storage
+// ---------------------------------------------------------------------------
+
+/// 对象元数据。字节在 OSS / 本地盘，这里只记「是什么、谁的、能不能拿」。
+model File {
+  id          String   @id
+  namespace   String
+  /// 对象存储里的完整 key，同一 provider 下唯一
+  objectKey   String
+  provider    String
+  fileName    String
+  mimeType    String
+  size        Int
+  visibility  String
+  status      String
+  /// 上传方的业务身份；account 上线后是全局 user sub
+  ownerId     String?
+  /// 哪个站点传的，用于隔离与配额
+  clientId    String
+  checksum    String?
+  /// 少量标签的 JSON，不承担业务数据职责
+  labels      String   @default("{}")
+  /// 分片直传期间的 OSS uploadId
+  uploadId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  releaseAssets ReleaseAsset[]
+
+  @@unique([provider, objectKey])
+  @@index([clientId, namespace, status])
+  @@index([ownerId])
+}
+
+// ---------------------------------------------------------------------------
+// catalog
+// ---------------------------------------------------------------------------
+
+/// 公司产品目录的唯一机器可读来源。运营文案不进这里。
+model CatalogProduct {
+  id                String   @id
+  slug              String   @unique
+  name              String
+  tagline           String   @default("")
+  status            String
+  webUrl            String?
+  iconUrl           String?
+  /// ProductPlatform 列表的 JSON 数组
+  supportedPlatforms String  @default("[]")
+  /// 关联 Releases 的产品键；不发安装包的产品为空
+  releaseProductKey String?
+  listed            Boolean  @default(true)
+  sortWeight        Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([status, listed])
+}
+
+// ---------------------------------------------------------------------------
+// releases
+// ---------------------------------------------------------------------------
+
+model Release {
+  id                String   @id
+  productKey        String
+  version           String
+  channel           String
+  status            String
+  releasedAt        DateTime?
+  changelog         String   @default("")
+  minimumUpgradeFrom String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  assets ReleaseAsset[]
+
+  @@unique([productKey, channel, version])
+  @@index([productKey, channel, status])
+}
+
+model ReleaseAsset {
+  id           String   @id
+  releaseId    String
+  fileId       String
+  platform     String
+  architecture String
+  checksum     String?
+  labels       String   @default("{}")
+  createdAt    DateTime @default(now())
+
+  release Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  file    File    @relation(fields: [fileId], references: [id])
+
+  @@unique([releaseId, platform, architecture])
+  @@index([fileId])
+}
+
+// ---------------------------------------------------------------------------
+// payments
+// ---------------------------------------------------------------------------
+
+/// 支付单。只管钱怎么付；买了什么、因此拥有什么能力由产品与未来的
+/// Billing / Entitlements 表达，不要塞进这里。
+model Payment {
+  id                    String   @id
+  /// 调用方自己的订单号，配合 clientId 做创建幂等
+  clientOrderNo         String
+  clientId              String
+  provider              String
+  method                String
+  amountCents           Int
+  currency              String   @default("CNY")
+  subject               String
+  status                String
+  payerId               String?
+  payerOpenId           String?
+  providerTransactionId String?
+  returnUrl             String?
+  paidAt                DateTime?
+  expiresAt             DateTime?
+  /// 回传给产品用于履约的上下文，platform 原样保存不解释
+  metadata              String   @default("{}")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  refunds Refund[]
+  events  PaymentEvent[]
+
+  @@unique([clientId, clientOrderNo])
+  @@index([status, createdAt])
+  @@index([providerTransactionId])
+}
+
+/// 渠道回调的幂等去重表：同一 providerEventId 只处理一次。
+model PaymentEvent {
+  id              String   @id
+  paymentId       String
+  provider        String
+  /// 渠道侧事件唯一键（微信 transaction_id、支付宝 notify_id 等）
+  providerEventId String
+  type            String
+  payload         String
+  createdAt       DateTime @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerEventId])
+  @@index([paymentId])
+}
+
+model Refund {
+  id            String   @id
+  paymentId     String
+  clientRefundNo String
+  amountCents   Int
+  status        String
+  reason        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@unique([paymentId, clientRefundNo])
+}
