@@ -58,7 +58,8 @@ npm run build
 
 ## 文档
 
-- `docs/company-architecture-round2-report.md` —— **第二轮收口报告（给其他 AI / Owner）**
+- `docs/company-architecture-round2-report.md` —— **当前第二轮收口报告（给其他 AI / Owner）**
+- `docs/company-architecture-upgrade-report.md` —— 第一轮架构升级历史报告
 - `docs/capability-registry.md`
 - `docs/identity-trust.md`
 - `docs/rishi-integration.md`
