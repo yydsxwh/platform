@@ -73,6 +73,7 @@ Billing / Entitlements、Audit、Theme Service。这些目前没有第二个真�
 
 ## 文档
 
+- `docs/company-architecture-upgrade-report.md` —— **架构升级总报告（Markdown，给其他 AI / 协作者首选）**
 - `docs/company-platform-architecture.md` —— 公司级五层架构、Studio 定位、Secret 原则
 - `docs/capability-registry.md` —— **每新增一个公共能力先更新这张表**
 - `docs/architecture.md` —— 四层边界、数据所有权、版本策略
