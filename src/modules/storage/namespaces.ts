@@ -99,6 +99,15 @@ const DEFINITIONS: NamespaceDefinition[] = [
     allowDirectUpload: true,
     allowedClients: ["andyyyds", "softwarelist", "release-bot"],
   },
+  {
+    // 日事附件 / 课表原图 / OCR 临时文件。结构化业务数据不进这里。
+    namespace: "rishi-files",
+    defaultVisibility: "PRIVATE",
+    maxBytes: 20 * MB,
+    allowedMimeTypes: ANY_UPLOAD_MIME,
+    allowDirectUpload: true,
+    allowedClients: ["rishi"],
+  },
 ];
 
 const REGISTRY = new Map(DEFINITIONS.map((d) => [d.namespace, d]));

@@ -413,3 +413,58 @@ test("未知路由也返回统一错误体", async () => {
   assert.equal(res.status, 404);
   assert.equal((await json<PlatformErrorBody>(res)).error.code, "NOT_FOUND");
 });
+
+test("带 actor 时用户之间文件互相不可见", async () => {
+  const file = await uploadFile({
+    namespace: "images",
+    fileName: "alice.png",
+    mimeType: "image/png",
+    bytes: Buffer.from("alice-only"),
+    actor: "usr_alice",
+  });
+
+  const asBob = await ctx.request(`/v1/storage/files/${file.fileId}`, { actor: "usr_bob" });
+  assert.equal(asBob.status, 404);
+
+  const bobDownload = await ctx.request(`/v1/storage/files/${file.fileId}/download-url`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    actor: "usr_bob",
+    body: JSON.stringify({}),
+  });
+  assert.equal(bobDownload.status, 404);
+
+  const aliceList = await json<ListFilesResponse>(
+    await ctx.request("/v1/storage/files?namespace=images&limit=100", { actor: "usr_alice" }),
+  );
+  assert.ok(aliceList.files.some((item) => item.fileId === file.fileId));
+
+  const bobList = await json<ListFilesResponse>(
+    await ctx.request("/v1/storage/files?namespace=images&limit=100", { actor: "usr_bob" }),
+  );
+  assert.equal(bobList.files.some((item) => item.fileId === file.fileId), false);
+});
+
+test("rishi-files 只接受 rishi 调用方", async () => {
+  const denied = await createUpload({
+    namespace: "rishi-files",
+    fileName: "note.jpg",
+    mimeType: "image/jpeg",
+    size: 12,
+  });
+  assert.equal(denied.status, 403);
+
+  const rishi = await createTestApp({
+    PLATFORM_SERVICE_TOKENS: "rishi:test-token-rishi-0123456789abcdef:ai+storage",
+  });
+  try {
+    const allowed = await rishi.request("/v1/storage/namespaces/rishi-files", {
+      token: "test-token-rishi-0123456789abcdef",
+      actor: "usr_rishi_user",
+    });
+    assert.equal(allowed.status, 200);
+    assert.equal((await json<NamespacePolicy>(allowed)).namespace, "rishi-files");
+  } finally {
+    await rishi.close();
+  }
+});
