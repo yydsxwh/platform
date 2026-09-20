@@ -16,12 +16,20 @@ const config = loadConfig();
 const db = new PrismaClient();
 const { app } = buildApp({ config, db });
 
-const server = serve({ fetch: app.fetch, port: config.env.PORT }, (info) => {
-  logger.info("server", "listening", {
-    port: info.port,
-    storageProvider: config.env.STORAGE_DEFAULT_PROVIDER,
-  });
-});
+const server = serve(
+  {
+    fetch: app.fetch,
+    hostname: config.env.HOST,
+    port: config.env.PORT,
+  },
+  (info) => {
+    logger.info("server", "listening", {
+      host: config.env.HOST,
+      port: info.port,
+      storageProvider: config.env.STORAGE_DEFAULT_PROVIDER,
+    });
+  },
+);
 
 async function shutdown(signal: string) {
   console.log(`[platform] 收到 ${signal}，开始退出`);

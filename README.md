@@ -2,7 +2,7 @@
 
 公司公共平台服务仓库，包名 `@yydsxwh/platform`。
 
-- **Account** 管身份（**已上线**的 IdP）—— 不在本仓库，也不在这里再造一套
+- **Account** 管身份（**已上线** `https://account.yydsxwh.com`）—— 不在本仓库，也不在这里再造一套
 - **Platform** 管公共在线能力（本仓库）
 - **Shared** 管公共代码与 SDK（`yydsxwh/shared`）
 - **Product** 管自己的业务
@@ -38,7 +38,9 @@ npm test
 npm run build
 ```
 
-预发方案见 `docs/staging.md`。**不要**对本仓库做生产自动部署。
+预发域名（Owner 拍板）：`https://api-staging.yydsxwh.com`。  
+生产规划：`https://api.yydsxwh.com`。方案见 `docs/staging.md`、`docs/owner-decisions.md`。  
+**不要**对本仓库做生产自动部署。
 
 ## 认证
 
@@ -54,10 +56,12 @@ npm run build
 | Storage | IMPLEMENTED / TESTED / PR_READY | NOT_DEPLOYED |
 | Catalog | IMPLEMENTED / TESTED / PR_READY | NOT_DEPLOYED |
 | Releases | IMPLEMENTED / TESTED / PR_READY | NOT_DEPLOYED |
-| Payments 核心 | IMPLEMENTED / TESTED / PR_READY | NOT_DEPLOYED；渠道未迁 |
+| Payments 核心 | IMPLEMENTED / TESTED / PR_READY / STAGING_READY | NOT_DEPLOYED；NOT_PRODUCTION_MIGRATED |
 
 ## 文档
 
+- `docs/owner-decisions.md` —— Owner 已拍板的域名 / Account / 支付 / PR 顺序
+- `docs/next-execution-checklist.md` —— 拍板后执行清单与剩余阻塞
 - `docs/company-architecture-round2-report.md` —— **当前第二轮收口报告（给其他 AI / Owner）**
 - `docs/company-architecture-upgrade-report.md` —— 第一轮架构升级历史报告
 - `docs/capability-registry.md`

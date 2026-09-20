@@ -48,7 +48,7 @@
 
 ## 身份：NEEDS_ACCOUNT_INTEGRATION
 
-Account **不是未来规划**。缺的是产品与 platform 接到已有 IdP。
+Account **已上线**：`https://account.yydsxwh.com`。缺的是产品与 platform 接到已有 IdP。
 
 当前两站仍各持 cookie session。platform 只在服务凭证通过后接受 `X-Platform-Actor`。  
 详见 `docs/identity-trust.md` 与 shared `NEEDS_ACCOUNT_INTEGRATION.md`。

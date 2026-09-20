@@ -9,7 +9,8 @@
 | `PLATFORM_RELEASES_ENABLED` | Releases | `false` |
 | `PLATFORM_STORAGE_ENABLED` | Storage | `false` |
 
-Payments **没有**产品侧总开关可开生产渠道。platform 仅有核心 + mock。真实微信/支付宝切换：`NEEDS_OWNER_CONFIRMATION`。
+Payments **没有**产品侧总开关可开生产渠道。platform 仅有核心 + mock。  
+Owner 已拍板：本轮不切真实微信/支付宝生产。预发只验核心流程。
 
 ## 顺序（每次只开一个）
 
