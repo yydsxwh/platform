@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import type { AppEnv } from "../context";
 import { invalidRequest, notFound } from "../../errors";
+import { parseSchema as parse, readJson } from "./shared";
 import type { StorageService } from "../../modules/storage/service";
 import { PROXY_UPLOAD_MAX_BYTES } from "../../modules/storage/service";
 import type { LocalStorageAdapter } from "../../modules/storage/providers/local";
@@ -221,29 +222,6 @@ export function createLocalObjectRouter(deps: {
   });
 
   return router;
-}
-
-async function readJson(request: Request): Promise<unknown> {
-  const text = await request.text();
-  if (!text.trim()) return {};
-  try {
-    return JSON.parse(text);
-  } catch {
-    throw invalidRequest("请求体不是合法 JSON");
-  }
-}
-
-function parse<T>(schema: z.ZodType<T>, value: unknown): T {
-  const result = schema.safeParse(value);
-  if (!result.success) {
-    throw invalidRequest("请求参数不合法", {
-      issues: result.error.issues.map((i) => ({
-        path: i.path.join("."),
-        message: i.message,
-      })),
-    });
-  }
-  return result.data;
 }
 
 function optionalString(value: File | string | null): string | undefined {

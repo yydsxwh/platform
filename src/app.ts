@@ -18,10 +18,14 @@ import {
   type AppEnv,
 } from "./http/context";
 import { PlatformError } from "./errors";
+import { createCatalogRouter } from "./http/routes/catalog";
+import { createReleaseRouter } from "./http/routes/releases";
 import {
   createLocalObjectRouter,
   createStorageRouter,
 } from "./http/routes/storage";
+import { CatalogService } from "./modules/catalog/service";
+import { ReleaseService } from "./modules/releases/service";
 import { AliyunOssAdapter } from "./modules/storage/providers/aliyun-oss";
 import { LocalStorageAdapter } from "./modules/storage/providers/local";
 import { deriveLocalSigningKey } from "./modules/storage/providers/signing";
@@ -30,6 +34,8 @@ import { StorageService } from "./modules/storage/service";
 
 export type PlatformServices = {
   storage: StorageService;
+  catalog: CatalogService;
+  releases: ReleaseService;
 };
 
 export type BuiltApp = {
@@ -62,6 +68,8 @@ export function buildApp(input: {
   const { config, db } = input;
   const { adapter, local } = buildStorageAdapter(config);
   const storage = new StorageService(db, adapter);
+  const catalog = new CatalogService(db);
+  const releases = new ReleaseService(db, storage);
 
   const app = new Hono<AppEnv>();
   app.use("*", requestIdMiddleware());
@@ -85,8 +93,10 @@ export function buildApp(input: {
   const api = new Hono<AppEnv>();
   api.use("*", serviceAuthMiddleware(config));
   api.route("/storage", createStorageRouter({ storage, local }));
+  api.route("/catalog", createCatalogRouter({ catalog }));
+  api.route("/", createReleaseRouter({ releases }));
 
   app.route(`/${PLATFORM_API_VERSION}`, api);
 
-  return { app, services: { storage }, db };
+  return { app, services: { storage, catalog, releases }, db };
 }
