@@ -240,7 +240,7 @@ Account = `CURRENT` + `PRODUCTION`。五模块 = 代码齐 + `NOT_DEPLOYED`。
 | shared | 通过 | 通过 | 58/58 | N/A（发 TS 源码） |
 | platform | 通过 | 通过 | 114/114 | 通过 |
 | andyyyds | **仓库级 eslint 本就失败**（desktop `require`、既有 React Compiler 规则；本轮未改这些文件） | `tsc --noEmit` 通过 | 8/8 | 通过 |
-| softwarelist | 未作为本轮门禁重跑全量 eslint（无 `typecheck`/`test` 脚本） | `tsc --noEmit` 通过 | 6/6 | 见执行记录 |
+| softwarelist | 未作为本轮门禁重跑全量 eslint（仓库无 `typecheck`/`test` 脚本） | `tsc --noEmit` 通过 | 6/6 | 通过 |
 
 产品仓库没有 `npm run typecheck` / `npm run test` 脚本，上表用的是等价命令。
 产品 Feature Flag 默认值仍全部为 `false`。
