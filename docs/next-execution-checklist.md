@@ -15,8 +15,9 @@
 
 ## 人工下一步（Agent 不会做）
 
-1. Review 并 merge：shared → platform → 产品**非生产**分支  
-   **禁止** merge `Andyyyds#24` 或任何进入 `Andyyyds20260901independentpackage` 的 PR，除非 Owner 再次明确。
+1. Review 并 merge：shared#4 → platform#4 → 产品**非生产** PR（Andyyyds#27 / softwarelist#5）  
+   **禁止**再 merge 任何进入 `Andyyyds20260901independentpackage` 的 PR，除非 Owner 再次明确。  
+   说明：`Andyyyds#24` 已在生产基线（本 Agent 未执行该合并）。
 2. 在香港机创建 `/var/www/platform-staging`、独立 DB 与 Secret、进程 `platform-staging`、`127.0.0.1:4000`
 3. DNS + TLS：`api-staging.yydsxwh.com` → 该进程  
    `GET https://api-staging.yydsxwh.com/health` 与 `/ready`

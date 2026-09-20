@@ -257,19 +257,21 @@ Account = `CURRENT` + `PRODUCTION`。五模块 = 代码齐 + `NOT_DEPLOYED`。
 
 | 仓库 | PR | base |
 |---|---|---|
-| shared | https://github.com/yydsxwh/shared/pull/3 | `main` |
-| platform | https://github.com/yydsxwh/platform/pull/3 | `main` |
-| Andyyyds | https://github.com/yydsxwh/Andyyyds/pull/26 | `cursor/platform-adapters-cd2f`（**不是**生产分支） |
-| softwarelist | https://github.com/yydsxwh/softwarelist/pull/4 | `cursor/platform-adapters-cd2f` |
+| shared | https://github.com/yydsxwh/shared/pull/4 | `main`（`v0.5.1`） |
+| platform | https://github.com/yydsxwh/platform/pull/4 | `main` |
+| Andyyyds | https://github.com/yydsxwh/Andyyyds/pull/27 | `cursor/platform-adapters-cd2f`（**不是**生产分支） |
+| softwarelist | https://github.com/yydsxwh/softwarelist/pull/5 | `cursor/platform-adapters-cd2f` |
 
 既有、不要当成本轮已上生产：
 
 | PR | 说明 |
 |---|---|
-| Andyyyds #24 | base = `Andyyyds20260901independentpackage` → **合并即生产部署** |
+| shared #3 / platform #3 | 第二轮收口已合 `main`，不含本次 Owner 拍板增量 |
+| Andyyyds #26 / softwarelist #4 | 已合进 adapters，不含本次预发域名注释 |
+| Andyyyds #24 | 已合进 `Andyyyds20260901independentpackage`（**生产基线**）。本 Agent **未**执行该合并 |
 | Andyyyds #25 | adapters，叠在 shared-single-source 上 |
 | softwarelist #2 / #3 | shared 接入与 adapters |
-| platform #2 | 第一轮 Markdown 报告（可与本轮 #3 一并看） |
+| platform #2 | 第一轮 Markdown 报告 |
 
 ## 30. 推荐 merge 顺序（Owner 拍板）
 
@@ -277,7 +279,7 @@ Account = `CURRENT` + `PRODUCTION`。五模块 = 代码齐 + `NOT_DEPLOYED`。
 1. shared v0.5.1
 2. platform（依赖 shared tag）
 3. softwarelist / 产品非生产适配层
-4. Andyyyds 非生产中间分支（本轮 #26，base 不是生产基线）
+4. Andyyyds 非生产中间分支（本轮 #27，base 不是生产基线）
 5. Platform 预发部署（人工；本 Agent 不执行）
 6. 单项 Feature Flag 验证（AI → Catalog → Releases → Storage → Payments）
 7. 主站生产分支最后
@@ -336,7 +338,7 @@ platform / shared / softwarelist **没有**同等自动生产部署。
 
 ## 35. 下一步建议（执行清单）
 
-1. 人工 review：shared#3 → platform#3 → 产品非生产 PR（**不要合 Andyyyds#24 / 生产基线**）
+1. 人工 review：shared#4 → platform#4 → 产品非生产 PR（**不要合任何进入生产基线的 PR**）
 2. Owner 在香港机落地预发：目录、独立 DB/Secret、Nginx、DNS/TLS → `https://api-staging.yydsxwh.com/health`
 3. 预发按 AI → Catalog → Releases → Storage → Payments 每次开一个 Flag
 4. 打开 account 仓库联调 Discovery / JWKS / aud
