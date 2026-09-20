@@ -298,7 +298,7 @@ export class StorageService {
       where: {
         clientId: caller.clientId,
         namespace: query.namespace,
-        ownerId: query.ownerId,
+        ownerId: caller.actorId ?? query.ownerId,
         status: query.status ?? { not: "DELETED" },
         ...(query.cursor ? { id: { lt: query.cursor } } : {}),
       },
@@ -432,6 +432,10 @@ export class StorageService {
     }
     // 不同站点的文件互相不可见：越权与不存在都返回 404，不泄露 id 是否有效
     if (row.clientId !== caller.clientId) {
+      throw notFound("文件不存在", { fileId });
+    }
+    // 带了终端用户身份时，只能碰自己的文件。没带 actor 的服务号调用保持原行为。
+    if (caller.actorId && row.ownerId && row.ownerId !== caller.actorId) {
       throw notFound("文件不存在", { fileId });
     }
     return row;
