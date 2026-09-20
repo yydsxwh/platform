@@ -247,7 +247,23 @@ Account = `CURRENT` + `PRODUCTION`。五模块 = 代码齐 + `NOT_DEPLOYED`。
 
 ## 29. PR 列表
 
-见文末。全部 **draft**，禁止自动 merge。
+全部 **draft**，禁止自动 merge。
+
+| 仓库 | PR | base |
+|---|---|---|
+| shared | https://github.com/yydsxwh/shared/pull/3 | `main` |
+| platform | https://github.com/yydsxwh/platform/pull/3 | `main` |
+| Andyyyds | https://github.com/yydsxwh/Andyyyds/pull/26 | `cursor/platform-adapters-cd2f`（**不是**生产分支） |
+| softwarelist | https://github.com/yydsxwh/softwarelist/pull/4 | `cursor/platform-adapters-cd2f` |
+
+既有、不要当成本轮已上生产：
+
+| PR | 说明 |
+|---|---|
+| Andyyyds #24 | base = `Andyyyds20260901independentpackage` → **合并即生产部署** |
+| Andyyyds #25 | adapters，叠在 shared-single-source 上 |
+| softwarelist #2 / #3 | shared 接入与 adapters |
+| platform #2 | 第一轮 Markdown 报告（可与本轮 #3 一并看） |
 
 ## 30. 推荐 merge 顺序
 
