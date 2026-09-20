@@ -19,12 +19,21 @@ import {
 } from "./http/context";
 import { PlatformError } from "./errors";
 import { createCatalogRouter } from "./http/routes/catalog";
+import {
+  createPaymentRouter,
+  createPaymentWebhookRouter,
+} from "./http/routes/payments";
 import { createReleaseRouter } from "./http/routes/releases";
 import {
   createLocalObjectRouter,
   createStorageRouter,
 } from "./http/routes/storage";
 import { CatalogService } from "./modules/catalog/service";
+import { MockPaymentAdapter } from "./modules/payments/providers/mock";
+import {
+  PaymentService,
+  type PaymentProviderAdapter,
+} from "./modules/payments/service";
 import { ReleaseService } from "./modules/releases/service";
 import { AliyunOssAdapter } from "./modules/storage/providers/aliyun-oss";
 import { LocalStorageAdapter } from "./modules/storage/providers/local";
@@ -36,6 +45,7 @@ export type PlatformServices = {
   storage: StorageService;
   catalog: CatalogService;
   releases: ReleaseService;
+  payments: PaymentService;
 };
 
 export type BuiltApp = {
@@ -61,6 +71,21 @@ export function buildStorageAdapter(config: PlatformConfig): {
   return { adapter, local: { adapter, signingKey } };
 }
 
+/**
+ * 目前只有 mock 渠道在本仓库实现：微信与支付宝的服务端实现仍在主站，
+ * 迁移要连同商户证书与回调域名一起切，属于独立一步。
+ * 这里先把核心流程（幂等、验签、金额核对、履约事件）做实，渠道按需接。
+ */
+function buildPaymentAdapters(
+  config: PlatformConfig,
+): Map<"WECHAT" | "ALIPAY" | "MOCK", PaymentProviderAdapter> {
+  const adapters = new Map<"WECHAT" | "ALIPAY" | "MOCK", PaymentProviderAdapter>();
+  if (config.allowMockPayments && config.paymentWebhookSecret) {
+    adapters.set("MOCK", new MockPaymentAdapter(config.paymentWebhookSecret));
+  }
+  return adapters;
+}
+
 export function buildApp(input: {
   config: PlatformConfig;
   db: PrismaClient;
@@ -70,6 +95,11 @@ export function buildApp(input: {
   const storage = new StorageService(db, adapter);
   const catalog = new CatalogService(db);
   const releases = new ReleaseService(db, storage);
+  const payments = new PaymentService(
+    db,
+    buildPaymentAdapters(config),
+    config.paymentWebhookSecret,
+  );
 
   const app = new Hono<AppEnv>();
   app.use("*", requestIdMiddleware());
@@ -80,6 +110,12 @@ export function buildApp(input: {
   // 健康检查不鉴权：给反代和进程守护用
   app.get("/healthz", (c) =>
     c.json({ ok: true, version: PLATFORM_API_VERSION, provider: adapter.provider }),
+  );
+
+  // 渠道回调带的是渠道自己的签名，不可能带我们的服务凭证
+  app.route(
+    `/${PLATFORM_API_VERSION}/payment-webhooks`,
+    createPaymentWebhookRouter({ payments }),
   );
 
   // 本地对象端点靠 URL 签名自证，不能要求浏览器带服务凭证
@@ -94,9 +130,10 @@ export function buildApp(input: {
   api.use("*", serviceAuthMiddleware(config));
   api.route("/storage", createStorageRouter({ storage, local }));
   api.route("/catalog", createCatalogRouter({ catalog }));
+  api.route("/payments", createPaymentRouter({ payments }));
   api.route("/", createReleaseRouter({ releases }));
 
   app.route(`/${PLATFORM_API_VERSION}`, api);
 
-  return { app, services: { storage, catalog, releases }, db };
+  return { app, services: { storage, catalog, releases, payments }, db };
 }

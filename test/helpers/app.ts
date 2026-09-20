@@ -11,7 +11,7 @@ import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import type { Hono } from "hono";
 
-import { buildApp } from "../../src/app";
+import { buildApp, type PlatformServices } from "../../src/app";
 import { loadConfig, type PlatformConfig } from "../../src/config";
 import type { AppEnv } from "../../src/http/context";
 
@@ -20,6 +20,7 @@ export const TEST_TOKEN_SOFTWARELIST = "test-token-softwarelist-0123456789ab";
 
 export type TestApp = {
   app: Hono<AppEnv>;
+  services: PlatformServices;
   db: PrismaClient;
   config: PlatformConfig;
   dir: string;
@@ -73,10 +74,11 @@ export async function createTestApp(
   } as NodeJS.ProcessEnv);
 
   const db = new PrismaClient({ datasources: { db: { url: `file:${dbPath}` } } });
-  const { app } = buildApp({ config, db });
+  const { app, services } = buildApp({ config, db });
 
   return {
     app,
+    services,
     db,
     config,
     dir,
