@@ -6,9 +6,13 @@ platform 只管**钱怎么付**：发起支付、对接渠道、验签回调、�
 产品收到结果后执行自己的业务。**绝不要把产品履约逻辑放进 payment**，
 否则它会慢慢长成第二个业务系统。
 
-本轮**不**把真实微信/支付宝生产渠道完全切换。
-状态：`PR_READY` / `STAGING_READY`，**不是** production migrated。
-商户号、回调域名、证书：`NEEDS_OWNER_CONFIRMATION`。
+Owner 已拍板：**本轮不切**微信 / 支付宝真实生产商户链路。线上支付继续走产品现有实现。
+
+状态：`STAGING_READY` / `NOT_PRODUCTION_MIGRATED`。**不是** `PRODUCTION_VERIFIED`。
+
+预发只允许验证：建单、查询、退款基础、webhook 验签与幂等、金额核对、履约事件签名、错误与回滚。
+
+生产商户号、API v3 Key、证书、支付宝密钥、生产 notify/callback URL：本轮禁止切换。真正迁移必须单独受控任务，届时仍标 `NEEDS_OWNER_CONFIRMATION`。Payments 是最后切生产的公共模块之一。
 
 ## 正确的分工
 

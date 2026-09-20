@@ -6,7 +6,7 @@
 
 | 问题 | 归属 |
 |---|---|
-| 用户是谁？怎么登录？ | **account**（已上线；产品接入见 `NEEDS_ACCOUNT_INTEGRATION`） |
+| 用户是谁？怎么登录？ | **account**（`https://account.yydsxwh.com`；产品接入见 `NEEDS_ACCOUNT_INTEGRATION`） |
 | 文件存哪、怎么签链接？ | platform / storage |
 | 软件版本与安装包下载？ | platform / releases |
 | 公司有哪些产品、在哪些端？ | platform / catalog |

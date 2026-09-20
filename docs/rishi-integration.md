@@ -8,11 +8,12 @@
 ## 架构
 
 ```
-Account
+Account  https://account.yydsxwh.com
   → OIDC
-  → Rishi Backend
-  → Rishi DB
-  → Platform
+  → Rishi Backend   Service Identity = rishi
+  → Rishi DB        End User = usr_*
+  → Platform        预发 https://api-staging.yydsxwh.com
+                    生产 https://api.yydsxwh.com（audience 用这个）
 ```
 
 ```
@@ -146,4 +147,8 @@ PLATFORM_SERVICE_TOKENS="...,rishi:REPLACE_RISHI_TOKEN:ai+storage"
 OIDC 用户身份 → Rishi Session → Rishi Backend → Platform Verified User Context
 ```
 
-`NEEDS_ACCOUNT_INTEGRATION`：issuer / JWKS / audience / assertion 策略需打开 account 仓库才能最终确认。
+Owner 已拍板公开标识：issuer `https://account.yydsxwh.com`，
+JWKS `https://account.yydsxwh.com/.well-known/jwks.json`，
+audience `https://api.yydsxwh.com`。
+
+Discovery / 验签 / 产品 Session 打通仍是 `NEEDS_ACCOUNT_INTEGRATION`。

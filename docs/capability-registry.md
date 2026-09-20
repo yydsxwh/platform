@@ -23,7 +23,7 @@
 | **Callers** | 未来所有产品；当前主站 / 软件站尚未切 OIDC |
 | **Data Owner** | account DB |
 | **Secret Owner** | account |
-| **API** | OIDC Discovery / JWKS / Authorize / Token / UserInfo（以 account 为准） |
+| **API** | 站点 `https://account.yydsxwh.com`。issuer / JWKS URL 见 Owner 拍板。Discovery 实测 `NEEDS_ACCOUNT_INTEGRATION` |
 | **Feature Flag** | 无（本工作区不改 account） |
 | **Production State** | **Account 已生产运行。** 产品接入未完成 |
 
@@ -112,7 +112,7 @@ Andyyyds 只应消费事实；大段营销文案留 softwarelist。本轮不删�
 
 履约（额度、课程、优惠券、分销、商家结算）= `PRODUCT_ONLY`。
 
-真实渠道切换需要商户号、回调 URL、证书：`NEEDS_OWNER_CONFIRMATION`。
+Owner：**本轮不切**真实渠道。状态 `NOT_PRODUCTION_MIGRATED`。以后单独任务再切。
 
 ## 七、产品履约
 
@@ -176,7 +176,7 @@ Observability 日志：`IMPLEMENTED`（requestId、client、module、route、dur
 | 项 | 内容 |
 |---|---|
 | **Capability** | types / contracts / platform-client / validation / utils / i18n / design tokens |
-| **Current Owner** | `@yydsxwh/shared` `v0.5.0` |
+| **Current Owner** | `@yydsxwh/shared` `v0.5.1` |
 | **Target Owner** | shared |
 | **Status** | `IMPLEMENTED` / `TESTED` / `PR_READY` |
 | **Callers** | andyyyds、softwarelist、platform |
@@ -184,7 +184,7 @@ Observability 日志：`IMPLEMENTED`（requestId、client、module、route、dur
 | **Secret Owner** | 禁止 |
 | **API** | npm 子路径 |
 | **Feature Flag** | 无 |
-| **Production State** | 产品尚未把 v0.5.0 接到生产分支 |
+| **Production State** | 产品尚未把 v0.5.1 接到生产分支 |
 
 ---
 

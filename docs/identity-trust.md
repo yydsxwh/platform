@@ -50,9 +50,18 @@ platform：
 - 可信产品后端签名的短期 JWT
 - 标准 token exchange
 
-预留头：`X-Platform-User-Assertion`。校验需要 account 的 issuer / JWKS / audience。
+预留头：`X-Platform-User-Assertion`。本轮不实现验签。
 
-环境变量占位（不验签）：`ACCOUNT_ISSUER`、`ACCOUNT_JWKS_URI`、`ACCOUNT_AUDIENCE`。
+Owner 拍板的公开标识（写入环境变量 ≠ 已验签）：
+
+```bash
+ACCOUNT_ISSUER=https://account.yydsxwh.com
+ACCOUNT_JWKS_URI=https://account.yydsxwh.com/.well-known/jwks.json
+ACCOUNT_AUDIENCE=https://api.yydsxwh.com
+```
+
+长期 assertion：`iss = https://account.yydsxwh.com`，`sub = usr_*`，`aud = https://api.yydsxwh.com`。  
+不要把产品 client_id 当成 audience。Discovery / JWKS 实测：`NEEDS_ACCOUNT_INTEGRATION`。
 
 ## Service Token
 

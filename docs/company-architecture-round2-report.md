@@ -82,7 +82,7 @@ RS256 ID Token、UserInfo、Refresh Token Rotation、Session、全局不可变 `
 
 ## 7. Shared 当前状态
 
-`IMPLEMENTED` / `TESTED` / `PR_READY`（tag `v0.5.0`，未 merge 到生产使用方）
+`IMPLEMENTED` / `TESTED` / `PR_READY`（tag `v0.5.1`，未 merge 到生产使用方）
 
 仍是唯一公共代码来源。两站 `packages/shared` 只有 re-export 与 adapter，
 本轮未发现新复制的公共实现。禁止项（Prisma / Secret / Provider 实现）未进入 shared。
@@ -119,10 +119,10 @@ namespace / MIME / 大小 / 权限 / 短时 URL / 删除 / 404 / 未授权。
 
 ## 12. Payments
 
-`IMPLEMENTED` / `TESTED` / `PR_READY` / `STAGING_READY` / `NOT_DEPLOYED`
+`IMPLEMENTED` / `TESTED` / `PR_READY` / `STAGING_READY` / `NOT_DEPLOYED` / `NOT_PRODUCTION_MIGRATED`
 
 核心：create / query / refund / webhook / 幂等 / 金额核对 / 履约事件。  
-履约仍属产品。真实微信/支付宝**未**迁，**不是** production migrated。
+履约仍属产品。Owner 拍板：本轮**不切**真实微信/支付宝生产商户。**不是** `PRODUCTION_VERIFIED`。
 
 ## 13. Studio / Admin
 
@@ -171,8 +171,9 @@ Git 跟踪文件中**未发现**真实 AI Key / OSS AK / 支付私钥 / SSH / �
 
 `DOCUMENTED`（不是 `DEPLOYED`）
 
-见 `docs/staging.md`：端口 4000、systemd、nginx、health URL、migrate、回滚。  
-建议域名 `api.yydsxwh.com`，**不假设 DNS 已存在**。未自动配置、未连生产机。
+见 `docs/staging.md`、`docs/owner-decisions.md`。  
+Owner 已拍板：预发 `https://api-staging.yydsxwh.com`（目录 `/var/www/platform-staging`，进程 `platform-staging`，`127.0.0.1:4000`）；生产规划 `https://api.yydsxwh.com`。  
+DNS/TLS/装机 **未执行**，不是 `DEPLOYED`。
 
 ## 19. Feature Flag 验证顺序
 
@@ -185,9 +186,14 @@ Git 跟踪文件中**未发现**真实 AI Key / OSS AK / 支付私钥 / SSH / �
 
 `PLANNED` / `NEEDS_ACCOUNT_INTEGRATION`
 
-需要打开 account 仓库确认：issuer、JWKS、audience、assertion 策略。  
-产品：OIDC → Session → 后端 → Platform Actor / 未来 assertion。  
-不在本工作区伪造 account。
+Owner 已拍板公开标识：
+
+- issuer `https://account.yydsxwh.com`
+- JWKS `https://account.yydsxwh.com/.well-known/jwks.json`
+- audience `https://api.yydsxwh.com`（不是产品 client_id）
+
+仍要打开 account 仓库联调：Discovery 实测、JWKS 行为、aud 兼容、assertion 验签、产品 Session。  
+不在本工作区伪造 account，不擅自改 account。
 
 ## 21. Rishi 接入标准
 
@@ -224,7 +230,7 @@ App → 产品后端 → Platform。禁止 App 持有 service token 或 OSS AK�
 `PLANNED`（本轮不迁发布基础设施）
 
 未来拆 `@yydsxwh/types` / `platform-client` / `auth-client` / `design-system`，
-走正式 registry + SemVer。现在继续 `git+…#v0.5.0`。
+走正式 registry + SemVer。现在继续 `git+…#v0.5.1`。
 
 ## 27. Capability Registry 更新结果
 
@@ -237,8 +243,8 @@ Account = `CURRENT` + `PRODUCTION`。五模块 = 代码齐 + `NOT_DEPLOYED`。
 
 | 仓库 | lint | typecheck | test | build |
 |---|---|---|---|---|
-| shared | 通过 | 通过 | 58/58 | N/A（发 TS 源码） |
-| platform | 通过 | 通过 | 114/114 | 通过 |
+| shared | 通过 | 通过 | 59/59 | N/A（发 TS 源码） |
+| platform | 通过 | 通过 | 116/116 | 通过 |
 | andyyyds | **仓库级 eslint 本就失败**（desktop `require`、既有 React Compiler 规则；本轮未改这些文件） | `tsc --noEmit` 通过 | 8/8 | 通过 |
 | softwarelist | 未作为本轮门禁重跑全量 eslint（仓库无 `typecheck`/`test` 脚本） | `tsc --noEmit` 通过 | 6/6 | 通过 |
 
@@ -247,32 +253,39 @@ Account = `CURRENT` + `PRODUCTION`。五模块 = 代码齐 + `NOT_DEPLOYED`。
 
 ## 29. PR 列表
 
-全部 **draft**，禁止自动 merge。
+禁止自动 merge。主站生产基线相关 PR **不得**由 Agent 合并。
 
 | 仓库 | PR | base |
 |---|---|---|
-| shared | https://github.com/yydsxwh/shared/pull/3 | `main` |
-| platform | https://github.com/yydsxwh/platform/pull/3 | `main` |
-| Andyyyds | https://github.com/yydsxwh/Andyyyds/pull/26 | `cursor/platform-adapters-cd2f`（**不是**生产分支） |
-| softwarelist | https://github.com/yydsxwh/softwarelist/pull/4 | `cursor/platform-adapters-cd2f` |
+| shared | https://github.com/yydsxwh/shared/pull/4 | `main`（`v0.5.1`） |
+| platform | https://github.com/yydsxwh/platform/pull/4 | `main` |
+| Andyyyds | https://github.com/yydsxwh/Andyyyds/pull/27 | `cursor/platform-adapters-cd2f`（**不是**生产分支） |
+| softwarelist | https://github.com/yydsxwh/softwarelist/pull/5 | `cursor/platform-adapters-cd2f` |
 
 既有、不要当成本轮已上生产：
 
 | PR | 说明 |
 |---|---|
-| Andyyyds #24 | base = `Andyyyds20260901independentpackage` → **合并即生产部署** |
+| shared #3 / platform #3 | 第二轮收口已合 `main`，不含本次 Owner 拍板增量 |
+| Andyyyds #26 / softwarelist #4 | 已合进 adapters，不含本次预发域名注释 |
+| Andyyyds #24 | 已合进 `Andyyyds20260901independentpackage`（**生产基线**）。本 Agent **未**执行该合并 |
 | Andyyyds #25 | adapters，叠在 shared-single-source 上 |
 | softwarelist #2 / #3 | shared 接入与 adapters |
-| platform #2 | 第一轮 Markdown 报告（可与本轮 #3 一并看） |
+| platform #2 | 第一轮 Markdown 报告 |
 
-## 30. 推荐 merge 顺序
+## 30. 推荐 merge 顺序（Owner 拍板）
 
 ```
-shared v0.5.0
-  → platform（依赖 shared tag）
-  → 已有产品 adapter PR（shared-single-source → platform-adapters）
-  → 本轮产品注释 PR（叠在 adapters 上）
+1. shared v0.5.1
+2. platform（依赖 shared tag）
+3. softwarelist / 产品非生产适配层
+4. Andyyyds 非生产中间分支（本轮 #27，base 不是生产基线）
+5. Platform 预发部署（人工；本 Agent 不执行）
+6. 单项 Feature Flag 验证（AI → Catalog → Releases → Storage → Payments）
+7. 主站生产分支最后
 ```
+
+**禁止**自动 merge 任何进入 `Andyyyds20260901independentpackage` 的 PR（含 #24）。
 
 ## 31. 哪些 PR 会触发生产部署
 
@@ -295,34 +308,43 @@ platform / shared / softwarelist **没有**同等自动生产部署。
 | `OSS_ACCESS_KEY_ID` / `SECRET` | 仅 platform（若用 OSS） |
 | `PAYMENT_WEBHOOK_SECRET` | platform |
 | `STORAGE_LOCAL_SIGNING_KEY` | platform 推荐 |
-| account issuer/JWKS | 下一轮 |
+| `ACCOUNT_ISSUER` / `JWKS_URI` / `AUDIENCE` | 公开标识已拍板，写入预发即可；验签下一轮 |
 
 ## 33. NEEDS_ACCOUNT_INTEGRATION
 
-- 产品 OIDC 接入
-- 两站用户是否合并（必须经 account，禁止对拷）
-- platform 验 assertion（issuer / JWKS / aud）
+（issuer / JWKS URL / audience **值**已拍板，下面是行为联调）
+
+- Discovery 实际响应是否与拍板值一致
+- JWKS 行为
+- account 现有实现是否接受 Platform audience（不要改 account）
+- User Assertion / Platform 验签
+- 产品 Session 与 OIDC 打通
+- 两站用户合并（必须经 account）
 - Entitlements 挂全局 sub
 - docs/mathcode 跨站合并
 
 ## 34. NEEDS_OWNER_CONFIRMATION
 
-- 预发 / 生产 DNS 是否使用 `api.yydsxwh.com`
-- TLS、防火墙、部署主机
-- 微信/支付宝商户、回调域名、证书何时切
+（域名规划已拍板，下面是落地）
+
+- DNS 记录是否已添加
+- TLS 证书策略
+- 服务器是否已建 `/var/www/platform-staging`、是否占用 4000
+- 生产 Secret 配置
+- 主站生产分支 PR 何时 merge（**禁止 Agent 自动合**）
+- 真实支付商户资料 / 生产回调切换（Owner：本轮不做）
 - softwarelist 静态安装包 nginx 布局
-- 是否以及何时 merge 会触发主站生产部署的 PR
-- 本地 `andyyyds/.env` 是否含需轮换的真实商户材料（未进 Git，值未知）
+- 本地未跟踪的 `andyyyds/.env` 是否含需轮换材料
 
-## 35. 下一步建议
+## 35. 下一步建议（执行清单）
 
-1. 人工 review 并 merge **shared** → **platform**（不会自动部署生产）
-2. 单独准备预发机，按 `staging.md` 部署 platform，**不要**走主站 deploy workflow
-3. 按 Flag 顺序只开 AI 做预发验证
-4. 打开 account 仓库做 OIDC 联调
+1. 人工 review：shared#4 → platform#4 → 产品非生产 PR（**不要合任何进入生产基线的 PR**）
+2. Owner 在香港机落地预发：目录、独立 DB/Secret、Nginx、DNS/TLS → `https://api-staging.yydsxwh.com/health`
+3. 预发按 AI → Catalog → Releases → Storage → Payments 每次开一个 Flag
+4. 打开 account 仓库联调 Discovery / JWKS / aud
 5. 日事按 `rishi-integration.md` 接 Storage / AI
-6. 支付渠道最后、且单独确认商户配置
+6. 支付真实渠道：另开受控任务，本轮不切
 
 ---
 
-*本报告描述的是第二轮收口与预发准备，不是生产上线。*
+*本报告描述收口、Owner 拍板与预发准备，不是生产上线。*

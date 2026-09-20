@@ -99,7 +99,9 @@ platform 是一个进程、一个库，模块之间只通过各自的 Service �
 /v1/catalog/…   /v1/payments/…
 ```
 
-以后要收到 `api.yydsxwh.com` 后面时，前缀与鉴权方式不用改，加一层反代即可。
+Owner 拍板：预发 `https://api-staging.yydsxwh.com`，生产 `https://api.yydsxwh.com`。
+路径与鉴权不用改，反代即可。audience 用生产资源标识 `https://api.yydsxwh.com`，
+不要用产品 client_id。
 
 - 服务间认证：`Authorization: Bearer <token>`，一个调用方一把，可单独吊销
 - 用户身份：仅在服务凭证通过后接受 `X-Platform-Actor`；产品接好 account 后传全局 sub，**头名称不变**。详见 `identity-trust.md`
