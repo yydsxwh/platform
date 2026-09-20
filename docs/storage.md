@@ -5,6 +5,11 @@ platform 负责「对象存在哪、叫什么 key、谁能拿到、链接怎么�
 
 **不要把结构化业务数据塞进文件 labels，或存成 OSS 上的 JSON 来代替数据库。**
 
+日事的待办、课表、纪念日、提醒、便签正文必须进 **Rishi DB**。
+只有附件、图片、Word、安装包、媒体走 Storage。
+
+OSS AccessKey 只在 platform。浏览器与 App 不得得到长期 AK/SK。
+
 ## 数据流
 
 ```

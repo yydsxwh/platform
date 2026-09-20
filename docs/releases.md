@@ -4,6 +4,8 @@
 两个站点各维护一套下载逻辑，发新版要回代码里改字符串。
 
 切过来之后，**发版只在 platform 登记，站点只问「这个端的最新稳定版是什么」**。
+旧 URL `/api/app/download/...` 继续兼容；内部再转到 Releases → Storage → 短时签名。
+硬编码 `yyds.apk` / `yyds-windows-setup.exe` 仅作 fallback，开关默认关。
 
 ## 概念
 

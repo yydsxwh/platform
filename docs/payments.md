@@ -6,6 +6,10 @@ platform 只管**钱怎么付**：发起支付、对接渠道、验签回调、�
 产品收到结果后执行自己的业务。**绝不要把产品履约逻辑放进 payment**，
 否则它会慢慢长成第二个业务系统。
 
+本轮**不**把真实微信/支付宝生产渠道完全切换。
+状态：`PR_READY` / `STAGING_READY`，**不是** production migrated。
+商户号、回调域名、证书：`NEEDS_OWNER_CONFIRMATION`。
+
 ## 正确的分工
 
 ```

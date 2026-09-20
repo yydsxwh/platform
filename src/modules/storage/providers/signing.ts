@@ -4,8 +4,8 @@
  * 浏览器拿到的上传/下载地址只在有效期内成立，过期或被改一个字符即失效，
  * 与 OSS 预签名是同一套思路：不下发长期凭证。
  *
- * 签名密钥不额外要求运维再管一个 secret：从已有的服务凭证派生。
- * 服务凭证轮换时链接随之失效，这正是期望行为。
+ * 优先使用独立的 STORAGE_LOCAL_SIGNING_KEY，这样轮换 service token
+ * 不会让已发出的短时 URL 全部失效。未配置时仍从服务凭证派生（兼容旧行为）。
  */
 
 import { createHmac, timingSafeEqual } from "node:crypto";

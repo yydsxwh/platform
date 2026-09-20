@@ -11,12 +11,16 @@ import { PrismaClient } from "@prisma/client";
 import { PLATFORM_API_VERSION } from "@yydsxwh/shared/contracts/version";
 
 import type { PlatformConfig } from "./config";
+import { credentialTokens } from "./config";
 import {
   errorResponse,
   requestIdMiddleware,
+  scopeGuardMiddleware,
   serviceAuthMiddleware,
   type AppEnv,
 } from "./http/context";
+import { createHealthRouter } from "./http/health";
+import { requestLogMiddleware } from "./http/request-log";
 import { PlatformError } from "./errors";
 import { createAiRouter } from "./http/routes/ai";
 import { createCatalogRouter } from "./http/routes/catalog";
@@ -65,7 +69,9 @@ export function buildStorageAdapter(config: PlatformConfig): {
     if (!config.oss) throw new Error("OSS 配置缺失");
     return { adapter: new AliyunOssAdapter(config.oss), local: null };
   }
-  const signingKey = deriveLocalSigningKey(config.serviceTokens.values());
+  const signingKey =
+    config.env.STORAGE_LOCAL_SIGNING_KEY?.trim() ||
+    deriveLocalSigningKey(credentialTokens(config));
   const adapter = new LocalStorageAdapter({
     root: config.env.STORAGE_LOCAL_ROOT,
     publicBaseUrl: config.env.STORAGE_LOCAL_PUBLIC_BASE_URL,
@@ -107,14 +113,13 @@ export function buildApp(input: {
 
   const app = new Hono<AppEnv>();
   app.use("*", requestIdMiddleware());
+  app.use("*", requestLogMiddleware());
 
   app.onError((error, c) => errorResponse(c as never, error));
   app.notFound((c) => errorResponse(c as never, new PlatformError("NOT_FOUND", "接口不存在")));
 
-  // 健康检查不鉴权：给反代和进程守护用
-  app.get("/healthz", (c) =>
-    c.json({ ok: true, version: PLATFORM_API_VERSION, provider: adapter.provider }),
-  );
+  // 探活 / 就绪不鉴权：给反代和进程守护用。AI Provider 异常不影响 /health。
+  app.route("/", createHealthRouter({ db, config }));
 
   // 渠道回调带的是渠道自己的签名，不可能带我们的服务凭证
   app.route(
@@ -132,6 +137,7 @@ export function buildApp(input: {
 
   const api = new Hono<AppEnv>();
   api.use("*", serviceAuthMiddleware(config));
+  api.use("*", scopeGuardMiddleware());
   api.route("/ai", createAiRouter({ ai }));
   api.route("/storage", createStorageRouter({ storage, local }));
   api.route("/catalog", createCatalogRouter({ catalog }));

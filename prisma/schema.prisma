@@ -29,7 +29,7 @@ model File {
   size        Int
   visibility  String
   status      String
-  /// 上传方的业务身份；account 上线后是全局 user sub
+  /// 上传方的业务身份；产品接好 account 后应是全局 user sub
   ownerId     String?
   /// 哪个站点传的，用于隔离与配额
   clientId    String

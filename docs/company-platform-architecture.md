@@ -7,8 +7,8 @@
 
 ```
                           ┌───────────────┐
-                          │    account    │   用户 / 登录 / OIDC / Session
-                          │  Identity 层  │   MFA / Passkey / 全局 user sub
+                          │    account    │   已上线 IdP：OIDC / OAuth / Session
+                          │  Identity 层  │   JWKS / RS256 / 全局 usr_* sub
                           └───────┬───────┘
                                   │ OIDC
           ┌───────────────────────┼───────────────────────┐
@@ -102,7 +102,7 @@ platform 是一个进程、一个库，模块之间只通过各自的 Service �
 以后要收到 `api.yydsxwh.com` 后面时，前缀与鉴权方式不用改，加一层反代即可。
 
 - 服务间认证：`Authorization: Bearer <token>`，一个调用方一把，可单独吊销
-- 用户身份：`X-Platform-Actor`，account 上线后换成全局 sub，**头名称不变**
+- 用户身份：仅在服务凭证通过后接受 `X-Platform-Actor`；产品接好 account 后传全局 sub，**头名称不变**。详见 `identity-trust.md`
 - 版本：路径带 `/v1`，v1 内只做向后兼容变更
 - 错误：统一 `error.code`，调用方不要 match 文案
 
@@ -116,7 +116,7 @@ platform 是一个进程、一个库，模块之间只通过各自的 Service �
 | platform DB | 文件元数据、Release、产品目录事实、支付记录、AI 用量 |
 | Andyyyds DB | 主站业务：课程、论坛、约搭、商城、优惠券、分销、商家、装扮、聊天 |
 | softwarelist DB | 软件站业务与内容、网页文档、MathCode 额度 |
-| 未来 rishi DB | 待办、课表、提醒、笔记 |
+| rishi DB（产品未进本工作区） | 待办、课表、提醒、笔记正文、同步元数据 |
 | 未来 course DB | 课程业务数据 |
 
 跨系统一律走 API / event / SDK。
@@ -160,12 +160,12 @@ EntitlementChanged  UserNotificationRequested
 不建监控集群，但格式先统一，以后接采集不用回头改每个调用点：
 
 - **requestId** 贯穿请求，响应头回传，可与调用方日志对账
-- **结构化 JSON 日志**：固定 `ts / level / service / module / message`
-- **错误分类**：`CLIENT_ERROR` / `AUTH_ERROR` / `PROVIDER_ERROR` / `INTERNAL_ERROR`，
-  按类聚合告警，不靠 grep 文案
-- **敏感字段自动脱敏**
+- **结构化 JSON 日志**：`ts / level / service / module / message / clientId / route / durationMs / result / errorCode`
+- **错误分类**：`CLIENT_ERROR` / `AUTH_ERROR` / `PROVIDER_ERROR` / `INTERNAL_ERROR`（仅失败请求）
+- **敏感字段自动脱敏**（含 prompt / reply / token）
+- **探活**：`GET /health` 进程活着；`GET /ready` 检查 DB。外部 AI 故障不拖死 `/health`
 
-未预留：metrics、tracing、错误聚合平台——等有真实排查痛点再接。
+metrics / tracing / 错误聚合：契约预留，**不部署集群**。
 
 ## 迁移原则
 
