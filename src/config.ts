@@ -8,6 +8,11 @@
 import { z } from "zod";
 
 import {
+  ACCOUNT_ISSUER,
+  ACCOUNT_JWKS_URI,
+  PLATFORM_RESOURCE_AUDIENCE,
+} from "@yydsxwh/shared/contracts/identity";
+import {
   parseServiceScopes,
   type PlatformServiceScope,
   type ServiceCredential,
@@ -63,6 +68,11 @@ export function parseServiceTokens(raw: string): ServiceCredential[] {
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(4000),
+  /**
+   * 监听地址。Owner 拍板预发：127.0.0.1:4000，再由 Nginx 反代。
+   * 需要容器/本机对外直连时再改 0.0.0.0。
+   */
+  HOST: z.string().min(1).default("127.0.0.1"),
   DATABASE_URL: z.string().min(1),
   PLATFORM_SERVICE_TOKENS: z.string().min(1),
 
@@ -95,12 +105,12 @@ const envSchema = z.object({
   PAYMENT_ALLOW_MOCK: z.coerce.boolean().default(false),
 
   /**
-   * 预留：account issuer。本轮不实现 assertion 验签。
-   * NEEDS_ACCOUNT_INTEGRATION
+   * Account 公开标识。默认值即 Owner 拍板（不是 Secret）。
+   * 写入这些值 ≠ 已实现 assertion 验签。Discovery 实测：NEEDS_ACCOUNT_INTEGRATION
    */
-  ACCOUNT_ISSUER: z.string().optional(),
-  ACCOUNT_JWKS_URI: z.string().optional(),
-  ACCOUNT_AUDIENCE: z.string().optional(),
+  ACCOUNT_ISSUER: z.string().default(ACCOUNT_ISSUER),
+  ACCOUNT_JWKS_URI: z.string().default(ACCOUNT_JWKS_URI),
+  ACCOUNT_AUDIENCE: z.string().default(PLATFORM_RESOURCE_AUDIENCE),
 });
 
 export type PlatformEnv = z.infer<typeof envSchema>;
