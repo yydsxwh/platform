@@ -34,6 +34,7 @@ import {
   callChatCompletion,
   type ChatCompletionFn,
 } from "./provider";
+import type { AiSettingsStore } from "./settings-store";
 
 export type AiCaller = {
   clientId: string;
@@ -69,22 +70,46 @@ class RateLimiter {
   }
 }
 
+/** 库里的配置几秒内复用一次，避免每次调用都打一次 SQLite */
+const CONFIG_CACHE_MS = 5_000;
+
+/**
+ * 「测试图片识别」用的探针图：84×54 灰度 PNG，画着两个字母 OK。
+ * 纯文本模型收到它只会报参数错误或答非所问，正好把配错的路由暴露出来。
+ */
+const PROBE_IMAGE_BASE64 =
+  "iVBORw0KGgoAAAANSUhEUgAAAFQAAAA2CAAAAAB8POFMAAAASUlEQVR42u3XsQ0AMAgDQe+/dDJAguSG" +
+  "AvyUCK5DgE5DCHQgqic+DUYedBbqE1YGNAAtu0BXo1U9aALKRIGyTXegXNKgfNFh6AUo13NEjeQSbAAAAABJRU5ErkJggg==";
+
 export class AiService {
   private readonly health = new Map<string, ProviderHealthState>();
   private readonly limiter: RateLimiter;
+  private config: AiConfig;
+  private configLoadedAt = 0;
 
   constructor(
     private readonly db: PrismaClient,
-    private readonly config: AiConfig,
+    baseConfig: AiConfig,
     private readonly chat: ChatCompletionFn = callChatCompletion,
+    private readonly settings: AiSettingsStore | null = null,
   ) {
-    this.limiter = new RateLimiter(config.rateLimitPerMinute);
+    this.config = baseConfig;
+    this.limiter = new RateLimiter(baseConfig.rateLimitPerMinute);
+  }
+
+  /** 后台改完配置立刻生效，不必重启 platform。 */
+  async refresh(force = false): Promise<void> {
+    if (!this.settings) return;
+    if (!force && Date.now() - this.configLoadedAt < CONFIG_CACHE_MS) return;
+    this.config = await this.settings.load();
+    this.configLoadedAt = Date.now();
   }
 
   async chatCompletion(
     input: AiChatRequest,
     caller: AiCaller,
   ): Promise<AiChatResponse> {
+    await this.refresh();
     if (!input.messages?.length) {
       throw invalidRequest("messages 不能为空");
     }
@@ -250,6 +275,62 @@ export class AiService {
       return { purpose, candidates, resolved };
     });
     return { routes, defaultModel: this.config.defaultModel };
+  }
+
+  /**
+   * vision-ocr 必须落在带视觉能力的模型上。
+   * 配错了要在保存时就拦住——否则用户导入课表照片才发现，白跑一次上传。
+   */
+  assertRouteUsable(purpose: AiPurpose, candidates: string[]): void {
+    if (!candidates.length) return;
+    for (const ref of candidates) {
+      if (!/^[a-z][a-z0-9-]*\/.+$/.test(ref)) {
+        throw invalidRequest(`模型引用须为 provider/model 形式：${ref}`);
+      }
+    }
+    if (purpose !== "vision-ocr") return;
+    const bad: string[] = [];
+    for (const ref of candidates) {
+      const { providerId, modelId } = parseModelRef(ref);
+      const model = this.config.providers.get(providerId)?.models.find((m) => m.id === modelId);
+      // 认不出的型号交给调用时报错；这里只拦「明确登记为纯文本」的
+      if (model && !model.vision) bad.push(ref);
+    }
+    if (bad.length) {
+      throw invalidRequest(
+        `${bad.join("、")} 登记为纯文本模型，不能用于图片识别（vision-ocr）。请改选带视觉能力的模型。`,
+      );
+    }
+  }
+
+  /** 后台「测试文字调用 / 测试图片识别」都走真实链路，不给假成功。 */
+  async selfTest(
+    input: { purpose: AiPurpose; mode: "text" | "image" },
+    caller: AiCaller,
+  ): Promise<AiChatResponse> {
+    await this.refresh(true);
+    const messages: AiChatRequest["messages"] =
+      input.mode === "image"
+        ? [
+            {
+              role: "user",
+              content: [
+                { type: "text", text: "这张图里写了什么字？只回答图里的文字本身。" },
+                { type: "image_url", image_url: { url: `data:image/png;base64,${PROBE_IMAGE_BASE64}` } },
+              ],
+            },
+          ]
+        : [{ role: "user", content: "只回复两个字：正常" }];
+    return this.chatCompletion(
+      {
+        purpose: input.purpose,
+        messages,
+        temperature: 0,
+        maxTokens: 64,
+        metadata: { product: "platform", kind: `selftest-${input.mode}` },
+      },
+      caller,
+    );
   }
 
   async getUsageSummary(query: {
