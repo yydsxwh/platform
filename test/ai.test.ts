@@ -166,6 +166,32 @@ test("视觉用途路由到视觉模型", async () => {
   assert.equal(calls[0]!.model, "qwen-vl-max");
 });
 
+test("图片请求遇到纯文本模型时直接失败，不去调用它", async () => {
+  const { service, calls } = buildService(okReply, {
+    AI_ROUTES: JSON.stringify({ "vision-ocr": ["dashscope/qwen-plus"] }),
+  });
+  await assert.rejects(
+    () =>
+      service.chatCompletion(
+        {
+          purpose: "vision-ocr",
+          messages: [
+            {
+              role: "user",
+              content: [
+                { type: "text", text: "看课表" },
+                { type: "image_url", image_url: { url: "data:image/png;base64,AA" } },
+              ],
+            },
+          ],
+        },
+        caller,
+      ),
+    /没有可用视觉模型/,
+  );
+  assert.equal(calls.length, 0);
+});
+
 test("显式指定模型时优先于用途路由", async () => {
   const { service, calls } = buildService(okReply);
   const result = await service.chatCompletion(

@@ -36,6 +36,14 @@ import {
 } from "./provider";
 import type { AiSettingsStore } from "./settings-store";
 
+function messagesIncludeImage(messages: AiChatRequest["messages"]): boolean {
+  return messages.some(
+    (message) =>
+      Array.isArray(message.content) &&
+      message.content.some((part) => part.type === "image_url"),
+  );
+}
+
 export type AiCaller = {
   clientId: string;
   actorId: string | null;
@@ -151,11 +159,21 @@ export class AiService {
       );
     }
 
+    const wantsImage = messagesIncludeImage(input.messages);
     let lastError: unknown = null;
+    let blockedNonVision = false;
+    let triedVision = false;
     for (const [index, ref] of candidates.entries()) {
       const resolved = this.resolveProviderModel(ref);
       if (!resolved) continue;
       const { provider, modelId } = resolved;
+      const model = provider.models.find((item) => item.id === modelId);
+      // 带图片的请求只能进 vision:true 的模型。纯文本模型不能“假装看过图”。
+      if (wantsImage && model?.vision !== true) {
+        blockedNonVision = true;
+        continue;
+      }
+      if (wantsImage) triedVision = true;
 
       // 已经连续失败的 provider，在还有备选时直接跳过，不拿用户请求去试错
       if (this.isDegraded(provider.id) && index < candidates.length - 1) {
@@ -232,6 +250,13 @@ export class AiService {
           errorKind: error instanceof AiProviderError ? error.kind : "UNKNOWN",
         });
       }
+    }
+
+    if (wantsImage && !triedVision && blockedNonVision) {
+      throw failedPrecondition(
+        "没有可用视觉模型：请求包含图片，但候选模型都不支持视觉输入",
+        { requestId, purpose: input.purpose, tried: candidates },
+      );
     }
 
     throw providerUnavailable(
