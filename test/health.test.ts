@@ -30,6 +30,19 @@ test("GET /healthz 仍是探活别名", async () => {
   assert.equal(body.status, "alive");
 });
 
+test("AI 未配置时 /health 仍 200，模块状态单独标 unavailable", async () => {
+  const res = await ctx.request("/health", { token: "" });
+  assert.equal(res.status, 200);
+  const modules = await ctx.request("/health/modules", { token: "" });
+  assert.equal(modules.status, 200);
+  const body = await json<import("../src/http/health").ModuleStatusBody>(modules);
+  assert.equal(body.service, "platform");
+  assert.equal(body.modules.ai, "unavailable");
+  assert.equal(body.modules.storage, "ok");
+  assert.equal(body.modules.payments, "ok");
+  assert.equal(body.modules.notification, "not_in_this_process");
+});
+
 test("GET /ready 在数据库可用时 200，且不含 AI Provider 检查", async () => {
   const res = await ctx.request("/ready", { token: "" });
   assert.equal(res.status, 200);
