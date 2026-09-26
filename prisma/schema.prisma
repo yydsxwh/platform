@@ -208,3 +208,29 @@ model AiUsage {
   @@index([clientId, createdAt])
   @@index([provider, model])
 }
+
+/// 运行时可改的 AI Provider 配置。
+/// 有这张表之前，换一个模型或补一把 Key 都要改环境变量再重启；
+/// 主站后台「系统设置 → AI 接口」需要一个能在线保存的控制面，所以落库。
+/// 环境变量仍然有效，作为初始值与兜底；库里有同名 provider 时以库为准。
+model AiProviderSetting {
+  id        String   @id
+  label     String   @default("")
+  baseUrl   String
+  /// AES-256-GCM 密文，密钥来自 PLATFORM_CONFIG_ENCRYPTION_KEY。
+  /// 明文只在拼 Authorization 头时出现在内存里，不出现在任何响应与日志。
+  apiKeyCipher String?
+  /// JSON 数组：[{id, vision, costPerMillionInputMicros, costPerMillionOutputMicros}]
+  models    String   @default("[]")
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// 用途 → 候选模型路由。与 AI_ROUTES 同义，只是可在线改。
+model AiRouteSetting {
+  purpose    String   @id
+  /// JSON 数组，按顺序尝试的 `provider/model`
+  candidates String   @default("[]")
+  updatedAt  DateTime @updatedAt
+}

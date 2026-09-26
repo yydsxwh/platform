@@ -111,6 +111,13 @@ const envSchema = z.object({
   ACCOUNT_ISSUER: z.string().default(ACCOUNT_ISSUER),
   ACCOUNT_JWKS_URI: z.string().default(ACCOUNT_JWKS_URI),
   ACCOUNT_AUDIENCE: z.string().default(PLATFORM_RESOURCE_AUDIENCE),
+
+  /**
+   * 落库配置（当前是 AI Provider Key）的加密密钥，64 位 hex 或任意口令。
+   * 不配就只能用环境变量里的 Key，后台保存 Key 会被直接拒绝——
+   * 宁可不让存，也不明文落库。
+   */
+  PLATFORM_CONFIG_ENCRYPTION_KEY: z.string().optional(),
 });
 
 export type PlatformEnv = z.infer<typeof envSchema>;
@@ -134,6 +141,7 @@ export type PlatformConfig = {
   oss: OssConfig | null;
   paymentWebhookSecret: string | null;
   allowMockPayments: boolean;
+  configEncryptionKey: string | undefined;
 };
 
 export function loadConfig(source: NodeJS.ProcessEnv = process.env): PlatformConfig {
@@ -168,6 +176,7 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): PlatformCon
     oss,
     paymentWebhookSecret: env.PAYMENT_WEBHOOK_SECRET || null,
     allowMockPayments: env.PAYMENT_ALLOW_MOCK,
+    configEncryptionKey: env.PLATFORM_CONFIG_ENCRYPTION_KEY,
   };
 }
 

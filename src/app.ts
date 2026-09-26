@@ -34,6 +34,7 @@ import {
   createStorageRouter,
 } from "./http/routes/storage";
 import { AiService } from "./modules/ai/service";
+import { AiSettingsStore } from "./modules/ai/settings-store";
 import { CatalogService } from "./modules/catalog/service";
 import { MockPaymentAdapter } from "./modules/payments/providers/mock";
 import {
@@ -102,7 +103,8 @@ export function buildApp(input: {
   const { config, db } = input;
   const { adapter, local } = buildStorageAdapter(config);
   const storage = new StorageService(db, adapter);
-  const ai = new AiService(db, config.ai);
+  const aiSettings = new AiSettingsStore(db, config.ai, config.configEncryptionKey);
+  const ai = new AiService(db, config.ai, undefined, aiSettings);
   const catalog = new CatalogService(db);
   const releases = new ReleaseService(db, storage);
   const payments = new PaymentService(
@@ -138,7 +140,7 @@ export function buildApp(input: {
   const api = new Hono<AppEnv>();
   api.use("*", serviceAuthMiddleware(config));
   api.use("*", scopeGuardMiddleware());
-  api.route("/ai", createAiRouter({ ai }));
+  api.route("/ai", createAiRouter({ ai, settings: aiSettings }));
   api.route("/storage", createStorageRouter({ storage, local }));
   api.route("/catalog", createCatalogRouter({ catalog }));
   api.route("/payments", createPaymentRouter({ payments }));
