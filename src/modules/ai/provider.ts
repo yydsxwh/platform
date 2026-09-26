@@ -40,6 +40,33 @@ export type ChatCompletionFn = (
   input: ChatCompletionInput,
 ) => Promise<ChatCompletionOutput>;
 
+/**
+ * 通义千问视觉模型有时把 content 做成字符串，有时做成
+ * `[{ type: "text", text: "..." }]`。只对字符串调用 trim 会在数组上抛错，
+ * 调用方只能看到一次失败，看不出正文其实已经回来了。
+ */
+export function readAssistantText(
+  message: { content?: unknown; reasoning_content?: unknown } | null | undefined,
+): string {
+  const text = flattenModelContent(message?.content);
+  if (text) return text;
+  return flattenModelContent(message?.reasoning_content);
+}
+
+function flattenModelContent(content: unknown): string {
+  if (typeof content === "string") return content.trim();
+  if (!Array.isArray(content)) return "";
+  return content
+    .map((part) => {
+      if (typeof part === "string") return part;
+      if (!part || typeof part !== "object") return "";
+      const text = (part as { text?: unknown }).text;
+      return typeof text === "string" ? text : "";
+    })
+    .join("")
+    .trim();
+}
+
 export const callChatCompletion: ChatCompletionFn = async (input) => {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), input.timeoutMs);
@@ -84,11 +111,12 @@ export const callChatCompletion: ChatCompletionFn = async (input) => {
   }
 
   const data = (await response.json().catch(() => null)) as {
-    choices?: Array<{ message?: { content?: string } }>;
+    choices?: Array<{ message?: { content?: unknown; reasoning_content?: unknown } }>;
     usage?: { prompt_tokens?: number; completion_tokens?: number };
   } | null;
 
-  const content = data?.choices?.[0]?.message?.content?.trim() ?? "";
+  const message = data?.choices?.[0]?.message;
+  const content = readAssistantText(message);
   if (!content) {
     throw new AiProviderError("EMPTY", "模型返回空内容");
   }
