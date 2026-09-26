@@ -18,8 +18,9 @@
 
 | 路径 | 含义 |
 |---|---|
-| `GET /health` | 进程活着 |
-| `GET /ready` | 数据库与存储配置已就绪 |
+| `GET /health` | 进程活着。不检查 AI Key |
+| `GET /health/modules` | 各模块是否就绪。AI 未配置时为 `unavailable`，不让进程探活失败 |
+| `GET /ready` | 数据库与存储配置已就绪。不含 AI |
 | `GET /healthz` | `/health` 的兼容别名 |
 
 ## 快速开始
